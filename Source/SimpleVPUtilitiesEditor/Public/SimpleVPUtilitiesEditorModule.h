@@ -6,6 +6,8 @@
 #include "Modules/ModuleManager.h"
 #include "UObject/StrongObjectPtr.h"
 
+DECLARE_LOG_CATEGORY_EXTERN(LogSimpleVPUtilitiesEditor, Log, Log);
+
 class UOSCServer;
 
 class FSimpleVPUtilitiesEditorModule : public IModuleInterface
