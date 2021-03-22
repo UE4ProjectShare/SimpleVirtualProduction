@@ -15,6 +15,9 @@ public:
 	// Sets default values for this actor's properties
 	ASimpleVPViewportTickableBase(const FObjectInitializer& ObjectInitializer);
 
+	UFUNCTION(BlueprintNativeEvent, CallInEditor, BlueprintCallable, Category = "Tick")
+	void EditorTick(float DeltaSeconds);
+
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 

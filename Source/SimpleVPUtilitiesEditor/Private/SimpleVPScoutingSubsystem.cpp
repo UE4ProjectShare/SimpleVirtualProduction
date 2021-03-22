@@ -75,6 +75,29 @@ void USimpleVPScoutingSubsystem::ToggleVRScoutingUI(FVREditorFloatingUICreationC
 	}
 }
 
+bool USimpleVPScoutingSubsystem::IsVRScoutingUIOpen(const FName& PanelID)
+{
+	return IVREditorModule::Get().GetVRMode()->GetUISystem().IsShowingEditorUIPanel(PanelID);
+}
+
+AVREditorFloatingUI* USimpleVPScoutingSubsystem::GetPanelActor(const FName& PanelID) const
+{
+	return IVREditorModule::Get().GetVRMode()->GetUISystem().GetPanel(PanelID);
+}
+
+UUserWidget* USimpleVPScoutingSubsystem::GetPanelWidget(const FName& PanelID) const
+{
+	AVREditorFloatingUI* Panel = GetPanelActor(PanelID);
+	if (Panel == nullptr)
+	{
+		return nullptr;
+	}
+	else
+	{
+		return Panel->GetUserWidget();
+	}
+}
+
 bool USimpleVPScoutingSubsystem::IsUsingTransformGizmo()
 {
 	return GetDefault<USimpleVPUtilitiesEditorSettings>()->bUseTransformGizmo;

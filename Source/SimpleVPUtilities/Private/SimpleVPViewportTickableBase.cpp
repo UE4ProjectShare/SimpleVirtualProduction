@@ -13,7 +13,18 @@ ASimpleVPViewportTickableBase::ASimpleVPViewportTickableBase(const FObjectInitia
 	SetActorHiddenInGame(true);
 }
 
+void ASimpleVPViewportTickableBase::EditorTick_Implementation(float DeltaSeconds)
+{
+}
+
 void ASimpleVPViewportTickableBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+#if WITH_EDITOR
+	if (GIsEditor)
+	{
+		FEditorScriptExecutionGuard ScriptGuard;
+		EditorTick(DeltaTime);
+	}
+#endif
 }

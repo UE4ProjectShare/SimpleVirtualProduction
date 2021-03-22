@@ -31,6 +31,10 @@ class USimpleVPScoutingSubsystem : public UEditorSubsystem
 public:
 	USimpleVPScoutingSubsystem();
 
+	/** bool to keep track of whether the settings menu panel in the main menu is open*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Main Menu")
+	bool IsSettingsMenuOpen;
+	
 	/** This is a multiplier for grip nav speed so we can keep the grip nav value in the range 0-1 and increase this variable if we need a bigger range */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Virtual Production")
 	float GripNavSpeedCoeff;
@@ -40,6 +44,18 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Virtual Production")
     void ToggleVRScoutingUI(UPARAM(ref) FVREditorFloatingUICreationContext& CreationContext);
 
+	/** Check whether a widget UI is open*/
+	UFUNCTION(BlueprintPure, Category = "Virtual Production")
+    bool IsVRScoutingUIOpen(const FName& PanelID);
+	
+	/** Get UI panel Actor from the passed ID */
+	UFUNCTION(BlueprintPure, Category = "Virtual Production")
+    AVREditorFloatingUI* GetPanelActor(const FName& PanelID) const;
+	
+	/** Get UI panel widget from the passed ID */
+	UFUNCTION(BlueprintPure, Category = "Virtual Production")
+    UUserWidget* GetPanelWidget(const FName& PanelID) const;
+	
 	UFUNCTION(BlueprintPure, Category = "Virtual Production")
 	static const FName GetVProdPanelID(const EVPPanelIDs Panel)
 	{
