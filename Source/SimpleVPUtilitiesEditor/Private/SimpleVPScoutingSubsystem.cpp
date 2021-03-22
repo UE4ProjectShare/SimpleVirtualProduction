@@ -98,6 +98,16 @@ UUserWidget* USimpleVPScoutingSubsystem::GetPanelWidget(const FName& PanelID) co
 	}
 }
 
+TArray<UVREditorInteractor*> USimpleVPScoutingSubsystem::GetActiveEditorVRControllers()
+{
+	IVREditorModule& VREditorModule = IVREditorModule::Get();
+	UVREditorMode* VRMode = VREditorModule.GetVRMode();
+	
+	const TArray<UVREditorInteractor*> Interactors = VRMode->GetVRInteractors();
+	ensureMsgf(Interactors.Num() == 2, TEXT("Expected 2 VR controllers from VREditorMode, got %d"), Interactors.Num());
+	return Interactors;	
+}
+
 bool USimpleVPScoutingSubsystem::IsUsingTransformGizmo()
 {
 	return GetDefault<USimpleVPUtilitiesEditorSettings>()->bUseTransformGizmo;

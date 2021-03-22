@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
+#include "ISimpleUtilitiesEditorModule.h"
 #include "Modules/ModuleManager.h"
 #include "UObject/StrongObjectPtr.h"
 
@@ -10,13 +12,24 @@ DECLARE_LOG_CATEGORY_EXTERN(LogSimpleVPUtilitiesEditor, Log, Log);
 
 class UOSCServer;
 
-class FSimpleVPUtilitiesEditorModule : public IModuleInterface
+class FSimpleVPUtilitiesEditorModule : public ISimpleVPUtilitiesEditorModule
 {
 public:
 
 	/** IModuleInterface implementation */
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
+
+	/**
+	* Get an OSC server that can be started at the module's startup.
+	*/
+	virtual UOSCServer* GetOSCServer() const override;
+
+	/**
+	* Returns the Placement Mode Info for the Virtual Production category.
+	* The category will be registered if it has not already been.
+	*/
+	virtual const FPlacementCategoryInfo* GetVirtualProductionPlacementCategoryInfo() const override;
 
 private:
 	/** Register VPUtilities settings. */
@@ -39,4 +52,13 @@ private:
 	
 	/** The default OSC server. */
 	TStrongObjectPtr<UOSCServer> OSCServer;
+
+	/** Virtual production role identifier for the notification bar. */
+	static const FName VPRoleNotificationBarIdentifier;
+
+	/** UI Handler for virtual scouting. */
+	//TStrongObjectPtr<UVPCustomUIHandler> CustomUIHandler;
+
+	/** Unique Handle for the Virtual Production Placement Mode Category */
+	static const FName PlacementModeCategoryHandle;
 };

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "EditorSubsystem.h"
+#include "VREditorInteractor.h"
 #include "UI/VREditorFloatingUI.h"
 
 #include "SimpleVPScoutingSubsystem.generated.h"
@@ -55,6 +56,9 @@ public:
 	/** Get UI panel widget from the passed ID */
 	UFUNCTION(BlueprintPure, Category = "Virtual Production")
     UUserWidget* GetPanelWidget(const FName& PanelID) const;
+
+	UFUNCTION(BlueprintCallable, Category = "Virtual Production")
+	static TArray<UVREditorInteractor*> GetActiveEditorVRControllers();
 	
 	UFUNCTION(BlueprintPure, Category = "Virtual Production")
 	static const FName GetVProdPanelID(const EVPPanelIDs Panel)

@@ -38,6 +38,7 @@ public class SimpleVPUtilitiesEditor : ModuleRules
 				"UMG",
 				"UMGEditor",
 				"UnrealEd",
+				"SimpleVPBookmark",
 				"WorkspaceMenuStructure",
 				"CinematicCamera",
 				"OSC",

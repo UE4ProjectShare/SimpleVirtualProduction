@@ -2,6 +2,8 @@
 
 #include "SimpleVPUtilitiesEditorModule.h"
 
+
+#include "IPlacementModeModule.h"
 #include "ISettingsModule.h"
 #include "ISettingsSection.h"
 #include "LevelEditor.h"
@@ -14,6 +16,9 @@
 
 DEFINE_LOG_CATEGORY(LogSimpleVPUtilitiesEditor);
 
+const FName FSimpleVPUtilitiesEditorModule::VPRoleNotificationBarIdentifier = TEXT("VPRoles");
+const FName FSimpleVPUtilitiesEditorModule::PlacementModeCategoryHandle = TEXT("VirtualProduction");
+
 void FSimpleVPUtilitiesEditorModule::StartupModule()
 {
 	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
@@ -25,6 +30,41 @@ void FSimpleVPUtilitiesEditorModule::ShutdownModule()
 	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
 	// we call this function before unloading the module.
 	UnregisterSettings();
+}
+
+UOSCServer* FSimpleVPUtilitiesEditorModule::GetOSCServer() const
+{
+	return OSCServer.Get();
+}
+
+const FPlacementCategoryInfo* FSimpleVPUtilitiesEditorModule::GetVirtualProductionPlacementCategoryInfo() const
+{
+	if (GEditor)
+	{
+		IPlacementModeModule& PlacmentModeModule = IPlacementModeModule::Get();
+
+		if (const FPlacementCategoryInfo* RegisteredInfo = PlacmentModeModule.GetRegisteredPlacementCategory(PlacementModeCategoryHandle))
+		{
+			return RegisteredInfo;
+		}
+		else
+		{
+			FPlacementCategoryInfo Info(
+                LOCTEXT("VirtualProductionCategoryName", "Virtual Production"),
+                PlacementModeCategoryHandle,
+                TEXT("PMVirtualProduction"),
+                25
+            );
+
+			IPlacementModeModule::Get().RegisterPlacementCategory(Info);
+
+			// This will return nullptr if the Register above failed so we don't need to explicitly check
+			// RegisterPlacementCategory's return value.
+			return PlacmentModeModule.GetRegisteredPlacementCategory(PlacementModeCategoryHandle);
+		}
+	}
+
+	return nullptr;
 }
 
 void FSimpleVPUtilitiesEditorModule::RegisterSettings()
@@ -98,6 +138,8 @@ bool FSimpleVPUtilitiesEditorModule::OnSettingsModified()
 	return true;
 }
 
-#undef LOCTEXT_NAMESPACE
+
 	
 IMPLEMENT_MODULE(FSimpleVPUtilitiesEditorModule, SimpleVPUtilitiesEditor)
+
+#undef LOCTEXT_NAMESPACE
