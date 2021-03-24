@@ -10,4 +10,4 @@
 * @param DefaultVerbosity, default run time verbosity
 * @param CompileTimeVerbosity, maximum verbosity to compile into the code
 **/
-DECLARE_LOG_CATEGORY_EXTERN(LogVPUtilities, Log, Log);
+DECLARE_LOG_CATEGORY_EXTERN(LogSimpleVPUtilities, Log, Log);

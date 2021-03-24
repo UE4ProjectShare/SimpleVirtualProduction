@@ -32,5 +32,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Virtual Production")
     static ASimpleVPTransientEdTickableBase* SpawnVPTransientEditorTickableActor(UObject* ContextObject, const TSubclassOf<ASimpleVPTransientEdTickableBase> ActorClass, const FVector Location, const FRotator Rotation);
 
-	
+	/** Imports Image file into VirtualProduction/Snapshots/ folder */
+	UFUNCTION(BlueprintCallable, Category = "Virtual Production")
+    static UTexture* ImportSnapshotTexture(FString FileName, FString SubFolderName, FString AbsolutePathPackage);
+
+	/** Get the default OSC server. */
+	UFUNCTION(BlueprintCallable, Category = "Virtual Production")
+    static class UOSCServer* GetDefaultOSCServer();
 };

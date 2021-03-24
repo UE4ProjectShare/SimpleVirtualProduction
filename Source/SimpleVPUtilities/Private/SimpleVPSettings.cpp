@@ -24,7 +24,7 @@ USimpleVPSettings::USimpleVPSettings()
 			}
 			else
 			{
-				UE_LOG(LogVPUtilities, Fatal, TEXT("Role %s doesn't exist."), *Role);
+				UE_LOG(LogSimpleVPUtilities, Fatal, TEXT("Role %s doesn't exist."), *Role);
 			}
 		}
 	}

@@ -108,6 +108,18 @@ TArray<UVREditorInteractor*> USimpleVPScoutingSubsystem::GetActiveEditorVRContro
 	return Interactors;	
 }
 
+bool USimpleVPScoutingSubsystem::IsUsingMetricSystem()
+{
+	return GetDefault<USimpleVPUtilitiesEditorSettings>()->bUseMetric;
+}
+
+void USimpleVPScoutingSubsystem::SetIsUsingMetricSystem(const bool bInUseMetricSystem)
+{
+	USimpleVPUtilitiesEditorSettings* VPUtilitiesEditorSettings = GetMutableDefault<USimpleVPUtilitiesEditorSettings>();
+	VPUtilitiesEditorSettings->bUseMetric = bInUseMetricSystem;
+	VPUtilitiesEditorSettings->SaveConfig();
+}
+
 bool USimpleVPScoutingSubsystem::IsUsingTransformGizmo()
 {
 	return GetDefault<USimpleVPUtilitiesEditorSettings>()->bUseTransformGizmo;
@@ -130,9 +142,28 @@ void USimpleVPScoutingSubsystem::SetShowTransformGizmoCVar(const bool bInShowTra
 	CVar->Set(bInShowTransformGizmoCVar);
 }
 
+float USimpleVPScoutingSubsystem::GetFlightSpeed()
+{
+	return GetDefault<USimpleVPUtilitiesEditorSettings>()->FlightSpeed;
+}
+
+void USimpleVPScoutingSubsystem::SetFlightSpeed(const float InFlightSpeed)
+{
+	USimpleVPUtilitiesEditorSettings* VPUtilitiesEditorSettings = GetMutableDefault<USimpleVPUtilitiesEditorSettings>();
+	VPUtilitiesEditorSettings->FlightSpeed = InFlightSpeed;
+	VPUtilitiesEditorSettings->SaveConfig();
+}
+
 float USimpleVPScoutingSubsystem::GetGripNavSpeed()
 {
 	return GetDefault<USimpleVPUtilitiesEditorSettings>()->GripNavSpeed;
+}
+
+void USimpleVPScoutingSubsystem::SetGripNavSpeed(const float InGripNavSpeed)
+{
+	USimpleVPUtilitiesEditorSettings* VPUtilitiesEditorSettings = GetMutableDefault<USimpleVPUtilitiesEditorSettings>();
+	VPUtilitiesEditorSettings->GripNavSpeed = InGripNavSpeed;
+	VPUtilitiesEditorSettings->SaveConfig();
 }
 
 bool USimpleVPScoutingSubsystem::IsUsingInertiaDamping()
@@ -161,6 +192,27 @@ void USimpleVPScoutingSubsystem::SetInertiaDampingCVar(const float InInertiaDamp
 {
 	IConsoleVariable* CVar = IConsoleManager::Get().FindConsoleVariable(TEXT("VI.HighSpeedInertiaDamping"));
 	CVar->Set(InInertiaDamping);
+}
+
+bool USimpleVPScoutingSubsystem::IsHelperSystemEnabled()
+{
+	return GetDefault<USimpleVPUtilitiesEditorSettings>()->bIsHelperSystemEnabled;
+}
+
+void USimpleVPScoutingSubsystem::SetIsHelperSystemEnabled(const bool bInIsHelperSystemEnabled)
+{
+	USimpleVPUtilitiesEditorSettings* VPUtilitiesEditorSettings = GetMutableDefault<USimpleVPUtilitiesEditorSettings>();
+	VPUtilitiesEditorSettings->bIsHelperSystemEnabled = bInIsHelperSystemEnabled;
+	VPUtilitiesEditorSettings->SaveConfig();
+}
+
+void USimpleVPScoutingSubsystem::ExitVRMode()
+{
+	IVREditorModule& VREditorModule = IVREditorModule::Get();
+	if (VREditorModule.IsVREditorEnabled())
+	{
+		VREditorModule.EnableVREditor(false);
+	}
 }
 
 bool USimpleVPScoutingSubsystem::IsLocationGridSnappingEnabled()

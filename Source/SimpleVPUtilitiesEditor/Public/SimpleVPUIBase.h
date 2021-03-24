@@ -16,6 +16,10 @@ class SIMPLEVPUTILITIESEDITOR_API USimpleVPUIBase : public UEditorUtilityWidget
 {
 	GENERATED_BODY()
 
+public:
+	UPROPERTY(BlueprintReadOnly, Transient, Category = "Virtual Production")
+	AActor* SelectedActor;
+
 protected:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Virtual Production")
 	void OnBookmarkCreated(USimpleVPBookmark* Created);

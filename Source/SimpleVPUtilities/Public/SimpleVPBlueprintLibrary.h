@@ -18,5 +18,9 @@ public:
 	/** Set the VR grab speed cvar */
 	UFUNCTION(BlueprintCallable, Category = "Virtual Production")
     static void SetGrabSpeed(const float Speed);
+
+	/** Trigger an UnrealEd Duplicate */
+	UFUNCTION(BlueprintCallable, Category = "Virtual Production")
+    static bool EditorDuplicate();
 	
 };

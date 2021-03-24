@@ -22,6 +22,15 @@ enum class EVPPanelIDs : uint8
     GafferUI
 };
 
+/*
+* Base class of the helper class defined in BP
+*/
+UCLASS(Abstract, Blueprintable, MinimalAPI, meta = (ShowWorldContextPin))
+class USimpleVPScoutingSubsystemHelpersBase : public UObject
+{
+	GENERATED_BODY()
+};
+
 /**
  * 
  */
@@ -31,6 +40,10 @@ class USimpleVPScoutingSubsystem : public UEditorSubsystem
 	GENERATED_BODY()
 public:
 	USimpleVPScoutingSubsystem();
+
+	/** Subsystems can't have any Blueprint implementations, so we attach this class for any BP logic that we to provide. */
+	UPROPERTY(Transient, BlueprintReadOnly, Category = "Virtual Production")
+	USimpleVPScoutingSubsystemHelpersBase* VPSubsystemHelpers;
 
 	/** bool to keep track of whether the settings menu panel in the main menu is open*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Main Menu")
@@ -84,6 +97,14 @@ public:
 		return VProdPanelID;
 	};
 
+	/** Whether the VR user wants to use the metric system instead of imperial */
+	UFUNCTION(BlueprintPure, Category = "Virtual Production")
+    static bool IsUsingMetricSystem();
+
+	/** Set whether the VR user wants to use the metric system instead of imperial */
+	UFUNCTION(BlueprintCallable, Category = "Virtual Production")
+    static void SetIsUsingMetricSystem(const bool bInUseMetricSystem);
+	
 	/** Whether the VR user wants to have the transform gizmo enabled */
 	UFUNCTION(BlueprintPure, Category = "Virtual Production")
     static bool IsUsingTransformGizmo();
@@ -96,9 +117,21 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Virtual Production")
     static void SetShowTransformGizmoCVar(const bool bInShowTransformGizmoCVar);
 
+	/** Get flight speed for scouting in VR */
+	UFUNCTION(BlueprintPure, Category = "Virtual Production")
+    static float GetFlightSpeed();
+
+	/** Set flight speed for scouting in VR */
+	UFUNCTION(BlueprintCallable, Category = "Virtual Production")
+    static void SetFlightSpeed(const float InFlightSpeed);
+	
 	/** Get grip nav speed for scouting in VR */
 	UFUNCTION(BlueprintPure, Category = "Virtual Production")
     static float GetGripNavSpeed();
+
+	/** Set grip nav speed for scouting in VR */
+	UFUNCTION(BlueprintCallable, Category = "Virtual Production")
+    static void SetGripNavSpeed(const float InGripNavSpeed);
 
 	/** Whether grip nav inertia is enabled when scouting in VR */
 	UFUNCTION(BlueprintPure, Category = "Virtual Production")
@@ -112,6 +145,18 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Virtual Production")
     static void SetInertiaDampingCVar(const float InInertiaDamping);
 
+	/** Whether the helper system on the controllers is enabled */
+	UFUNCTION(BlueprintPure, Category = "Virtual Production")
+    static bool IsHelperSystemEnabled();
+
+	/** Set whether the helper system on the controllers is enabled   */
+	UFUNCTION(BlueprintCallable, Category = "Virtual Production")
+    static void SetIsHelperSystemEnabled(const bool bInIsHelperSystemEnabled);
+	
+	/** Exit VR Mode  */
+	UFUNCTION(BlueprintCallable, Category = "Virtual Production")
+    static void ExitVRMode();
+	
 	/** Whether location grid snapping is enabled */
 	UFUNCTION(BlueprintCallable, Category = "Virtual Production")
     static bool IsLocationGridSnappingEnabled();
