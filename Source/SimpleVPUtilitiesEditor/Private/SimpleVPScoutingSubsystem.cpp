@@ -7,8 +7,11 @@
 #include "SimpleVPUtilitiesEditorModule.h"
 
 #include "LevelEditorActions.h"
+#include "SimpleVPSettings.h"
 #include "SimpleVPUtilitiesEditorSettings.h"
 #include "VREditorMode.h"
+#include "Engine/AssetManager.h"
+#include "Engine/StreamableManager.h"
 #include "UI/VREditorUISystem.h"
 
 const FName USimpleVPScoutingSubsystem::VProdPanelID = FName(TEXT("VirtualProductionPanel"));
@@ -19,10 +22,98 @@ const FName USimpleVPScoutingSubsystem::VProdPanelTimelineID = FName(TEXT("Virtu
 const FName USimpleVPScoutingSubsystem::VProdPanelMeasureID = FName(TEXT("VirtualProductionPanelMeasure"));
 const FName USimpleVPScoutingSubsystem::VProdPanelGafferID = FName(TEXT("VirtualProductionPanelGaffer"));
 
+USimpleVPScoutingSubsystemGestureManagerBase::USimpleVPScoutingSubsystemGestureManagerBase()
+{
+	if (!HasAnyFlags(RF_ArchetypeObject | RF_ClassDefaultObject))
+	{
+		IVREditorModule::Get().OnVREditingModeEnter().AddUObject(this, &USimpleVPScoutingSubsystemGestureManagerBase::OnVREditingModeEnterCallback);
+		IVREditorModule::Get().OnVREditingModeExit().AddUObject(this, &USimpleVPScoutingSubsystemGestureManagerBase::OnVREditingModeExitCallback);
+	}
+}
+
+void USimpleVPScoutingSubsystemGestureManagerBase::BeginDestroy()
+{
+	if (!HasAnyFlags(RF_ArchetypeObject | RF_ClassDefaultObject))
+	{
+		IVREditorModule::Get().OnVREditingModeEnter().RemoveAll(this);
+		IVREditorModule::Get().OnVREditingModeExit().RemoveAll(this);
+	}
+
+	Super::BeginDestroy();
+}
+
+void USimpleVPScoutingSubsystemGestureManagerBase::Tick(float DeltaTime)
+{
+	FEditorScriptExecutionGuard ScriptGuard;
+	EditorTick(DeltaTime);
+}
+
+bool USimpleVPScoutingSubsystemGestureManagerBase::IsTickable() const
+{
+	if (IVREditorModule::IsAvailable())
+	{
+		return IVREditorModule::Get().IsVREditorModeActive();
+	}
+	return false;
+}
+
+TStatId USimpleVPScoutingSubsystemGestureManagerBase::GetStatId() const
+{
+	RETURN_QUICK_DECLARE_CYCLE_STAT(USimpleVPScoutingSubsystemGestureManagerBase, STATGROUP_Tickables);
+}
+
+void USimpleVPScoutingSubsystemGestureManagerBase::OnVREditingModeEnterCallback()
+{
+	FEditorScriptExecutionGuard ScriptGuard;
+	OnVREditingModeEnter();
+}
+
+void USimpleVPScoutingSubsystemGestureManagerBase::OnVREditingModeExitCallback()
+{
+	FEditorScriptExecutionGuard ScriptGuard;
+	OnVREditingModeExit();
+}
+
+void USimpleVPScoutingSubsystemGestureManagerBase::OnVREditingModeExit_Implementation()
+{
+}
+
+void USimpleVPScoutingSubsystemGestureManagerBase::OnVREditingModeEnter_Implementation()
+{
+}
+
+void USimpleVPScoutingSubsystemGestureManagerBase::EditorTick_Implementation(float DeltaSeconds)
+{
+}
+
 USimpleVPScoutingSubsystem::USimpleVPScoutingSubsystem()
 :	UEditorSubsystem(),
 	GripNavSpeedCoeff(4.0f)
 {
+}
+
+void USimpleVPScoutingSubsystem::Initialize(FSubsystemCollectionBase& Collection)
+{
+	UE_LOG(LogSimpleVPUtilitiesEditor, Log, TEXT("VP Scouting subsystem initialized."));
+
+	// Load the ScoutingHelper implemented in BP. See BaseVirtualProductionUtilitites.ini
+	VPSubsystemHelpers = nullptr;
+	if (UClass* EditorUtilityClass = GetDefault<USimpleVPUtilitiesEditorSettings>()->ScoutingSubsystemEditorUtilityClassPath.TryLoadClass<USimpleVPScoutingSubsystemHelpersBase>())
+	{
+		VPSubsystemHelpers = NewObject<USimpleVPScoutingSubsystemHelpersBase>(GetTransientPackage(), EditorUtilityClass);
+	}
+	else
+	{
+		UE_LOG(LogSimpleVPUtilitiesEditor, Warning, TEXT("Failed loading VPScoutingHelpers \"%s\""), *GetDefault<USimpleVPUtilitiesEditorSettings>()->ScoutingSubsystemEditorUtilityClassPath.ToString());
+	}
+
+	// to do final initializations at the right time
+	EngineInitCompleteDelegate = FCoreDelegates::OnFEngineLoopInitComplete.AddUObject(this, &USimpleVPScoutingSubsystem::OnEngineInitComplete);
+}
+
+void USimpleVPScoutingSubsystem::Deinitialize()
+{
+	VPSubsystemHelpers = nullptr;
 }
 
 void USimpleVPScoutingSubsystem::ToggleVRScoutingUI(FVREditorFloatingUICreationContext& CreationContext)
@@ -75,6 +166,20 @@ void USimpleVPScoutingSubsystem::ToggleVRScoutingUI(FVREditorFloatingUICreationC
 	}
 }
 
+void USimpleVPScoutingSubsystem::HideInfoDisplayPanel()
+{
+	UVREditorMode*  VRMode = IVREditorModule::Get().GetVRMode();
+	if (VRMode && VRMode->UISystemIsActive())
+	{
+		UVREditorUISystem& UISystem = VRMode->GetUISystem();
+		AVREditorFloatingUI* Panel = UISystem.GetPanel(UVREditorUISystem::InfoDisplayPanelID);
+		if (Panel->IsUIVisible()) 
+		{
+			Panel->ShowUI(false);
+		}
+	}
+}
+
 bool USimpleVPScoutingSubsystem::IsVRScoutingUIOpen(const FName& PanelID)
 {
 	return IVREditorModule::Get().GetVRMode()->GetUISystem().IsShowingEditorUIPanel(PanelID);
@@ -106,6 +211,26 @@ TArray<UVREditorInteractor*> USimpleVPScoutingSubsystem::GetActiveEditorVRContro
 	const TArray<UVREditorInteractor*> Interactors = VRMode->GetVRInteractors();
 	ensureMsgf(Interactors.Num() == 2, TEXT("Expected 2 VR controllers from VREditorMode, got %d"), Interactors.Num());
 	return Interactors;	
+}
+
+FString USimpleVPScoutingSubsystem::GetDirectorName()
+{
+	FString DirectorName = GetDefault<USimpleVPSettings>()->DirectorName;
+	if (DirectorName == TEXT(""))
+	{
+		DirectorName = "Undefined";
+	}
+	return DirectorName;
+}
+
+FString USimpleVPScoutingSubsystem::GetShowName()
+{
+	FString ShowName = GetDefault<USimpleVPSettings>()->ShowName;
+	if (ShowName == TEXT(""))
+	{
+		ShowName = "Undefined";
+	}
+	return ShowName;
 }
 
 bool USimpleVPScoutingSubsystem::IsUsingMetricSystem()
@@ -233,4 +358,29 @@ bool USimpleVPScoutingSubsystem::IsRotationGridSnappingEnabled()
 void USimpleVPScoutingSubsystem::ToggleRotationGridSnapping()
 {
 	FLevelEditorActionCallbacks::RotationGridSnap_Clicked();
+}
+
+void USimpleVPScoutingSubsystem::OnEngineInitComplete()
+{
+	FCoreDelegates::OnFEngineLoopInitComplete.Remove(EngineInitCompleteDelegate);
+	EngineInitCompleteDelegate.Reset();
+
+	// Load the GestureManager implemented in BP. See BaseVirtualProductionUtilitites.ini
+	// GestureManager needs the Take module, load it once the engine is loaded.
+	GestureManager = nullptr;
+	if (UClass* EditorUtilityClass = GetDefault<USimpleVPUtilitiesEditorSettings>()->GestureManagerEditorUtilityClassPath.TryLoadClass<USimpleVPScoutingSubsystemGestureManagerBase>())
+	{
+		GestureManager = NewObject<USimpleVPScoutingSubsystemGestureManagerBase>(GetTransientPackage(), EditorUtilityClass);
+	}
+	else
+	{
+		UE_LOG(LogSimpleVPUtilitiesEditor, Warning, TEXT("Failed loading VPScoutingHelpers \"%s\""), *GetDefault<USimpleVPUtilitiesEditorSettings>()->GestureManagerEditorUtilityClassPath.ToString());
+	}
+
+	// In debug some asset take a long time to load and crash the engine, preload those asset in async mode to prevent that
+	for (const FSoftClassPath& ClassAssetPath : GetDefault<USimpleVPUtilitiesEditorSettings>()->AdditionnalClassToLoad)
+	{
+		FStreamableManager& StreamableManager = UAssetManager::Get().GetStreamableManager();
+		StreamableManager.RequestAsyncLoad(ClassAssetPath);
+	}
 }

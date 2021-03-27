@@ -20,6 +20,7 @@ public class SimpleVPUtilities : ModuleRules
                 "GameplayTags",
                 "TimeManagement",
                 "UMG",
+                "SimpleVPBookmark"
 			}
 			);
 			
@@ -45,6 +46,7 @@ public class SimpleVPUtilities : ModuleRules
 					"UnrealEd",
 					"ViewportInteraction",
 					"VREditor",
+					"SimpleVPBookmarkEditor"
 				}
 			);
 		}

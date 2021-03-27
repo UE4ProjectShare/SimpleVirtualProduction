@@ -31,6 +31,41 @@ class USimpleVPScoutingSubsystemHelpersBase : public UObject
 	GENERATED_BODY()
 };
 
+/*
+* Base class of the gesture manager defined in BP
+*/
+UCLASS(Abstract, Blueprintable, MinimalAPI, meta = (ShowWorldContextPin))
+class USimpleVPScoutingSubsystemGestureManagerBase : public UObject, public FTickableEditorObject
+{
+	GENERATED_BODY()
+
+public:
+	USimpleVPScoutingSubsystemGestureManagerBase();
+
+	UFUNCTION(BlueprintNativeEvent, CallInEditor, BlueprintCallable, Category = "Tick")
+    void EditorTick(float DeltaSeconds);
+
+	UFUNCTION(BlueprintNativeEvent, CallInEditor, BlueprintCallable, Category = "VR")
+    void OnVREditingModeEnter();
+	UFUNCTION(BlueprintNativeEvent, CallInEditor, BlueprintCallable, Category = "VR")
+    void OnVREditingModeExit();
+
+	//~ Begin UObject interface
+	virtual void BeginDestroy() override;
+	//~ End UObject interface
+
+	//~ Begin FTickableEditorObject interface
+	virtual void Tick(float DeltaTime) override;
+	virtual ETickableTickType GetTickableTickType() const override { return ETickableTickType::Conditional; }
+	virtual bool IsTickable() const override;
+	virtual TStatId GetStatId() const override;
+	//~ End FTickableEditorObject interface
+
+private:
+	void OnVREditingModeEnterCallback();
+	void OnVREditingModeExitCallback();
+};
+
 /**
  * 
  */
@@ -41,9 +76,16 @@ class USimpleVPScoutingSubsystem : public UEditorSubsystem
 public:
 	USimpleVPScoutingSubsystem();
 
+	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+	virtual void Deinitialize() override;
+
 	/** Subsystems can't have any Blueprint implementations, so we attach this class for any BP logic that we to provide. */
 	UPROPERTY(Transient, BlueprintReadOnly, Category = "Virtual Production")
 	USimpleVPScoutingSubsystemHelpersBase* VPSubsystemHelpers;
+
+	/** GestureManager that manage some user input in VR editor. */
+	UPROPERTY(Transient, BlueprintReadOnly, Category = "Virtual Production")
+	USimpleVPScoutingSubsystemGestureManagerBase* GestureManager;
 
 	/** bool to keep track of whether the settings menu panel in the main menu is open*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Main Menu")
@@ -58,6 +100,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Virtual Production")
     void ToggleVRScoutingUI(UPARAM(ref) FVREditorFloatingUICreationContext& CreationContext);
 
+	/** Hide VR Sequencer Window*/
+	UFUNCTION(BlueprintCallable, Category = "Virtual Production")
+    void HideInfoDisplayPanel();
+	
 	/** Check whether a widget UI is open*/
 	UFUNCTION(BlueprintPure, Category = "Virtual Production")
     bool IsVRScoutingUIOpen(const FName& PanelID);
@@ -97,6 +143,12 @@ public:
 		return VProdPanelID;
 	};
 
+	UFUNCTION(BlueprintPure, Category = "Virtual Production")
+	static FString GetDirectorName();
+
+	UFUNCTION(BlueprintPure, Category = "Virtual Production")
+    static FString GetShowName();
+	
 	/** Whether the VR user wants to use the metric system instead of imperial */
 	UFUNCTION(BlueprintPure, Category = "Virtual Production")
     static bool IsUsingMetricSystem();
@@ -174,6 +226,10 @@ public:
     static void ToggleRotationGridSnapping();
 
 private:
+	FDelegateHandle EngineInitCompleteDelegate;
+
+	void OnEngineInitComplete();
+	
 	// Static IDs when submitting open/close requests for the VProd main menu panels. VREditorUISystem uses FNames to manage its panels, so these should be used for consistency.	
 	static const FName VProdPanelID;
 	static const FName VProdPanelLeftID;
